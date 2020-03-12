@@ -1,4 +1,4 @@
-# Repositório de Aulas de FPCC2/ UFCG
+# Repositório de Aulas de FPCC2 / UFCG
 
 ## Estatística descritiva
 
