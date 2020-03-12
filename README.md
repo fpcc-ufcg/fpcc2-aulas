@@ -4,4 +4,6 @@
 
 * reports/analise_descritiva.Rmd
 
-## Correlações
+## Análise de Correlação
+
+* reports/correlacao.Rmd
