@@ -67,7 +67,7 @@ elife <- read.table(here("data/LifeExpTable.txt")) %>% rename(país = V1, expect
 
 * Outliers?
   
-## Dados: expectativa de vida
+## Dados sobre expectativa de vida
 
 ```{r head, echo = TRUE}
 head(elife, n = 10)
@@ -78,7 +78,7 @@ Total de países nos dados: `r nrow(elife)`
 <!-- Como ter um resumo simples desses dados?  -->
 <!-- Qual o número representativo da maior parte dos dados? -->
 
-## Dados: expectativa de vida
+## Gráfico dos dados pela ordem alfabética (Países)
 
 ```{r pontos, fig.width = 10, fig.height=5.5}
 plot <- elife %>% mutate(index = 1:n())
@@ -92,7 +92,7 @@ ggplot(plot, aes(index, expectativa)) +
 
 <!-- Do primeiro para o último em ordem alfabética -->
 
-## Dados: expectativa de vida
+## Dados ordenados por expectativa de vida
 
 ```{r pontos2, fig.width = 10, fig.height=5.5}
 plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
@@ -179,9 +179,21 @@ ggplot(plot, aes(index, expectativa)) +
 ```
 <!-- Valor que divide os dados no meio (50-percentil). Metade da massa de probabilidade de cada lado -->
 
-## Outra forma de ver os dados (staked dot plot)
 
-&nbsp;
+## A distribuição dos dados (histograma)
+
+* Divide o intervalo células e conta as obeservações por célula
+  + Células grandes podem ocultar detalhes importantes da distribuição
+  + Células pequenas podem gerar ruído e atrapalhar a análise
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_histogram(alpha = 0.5, binwidth = 1) + 
+  theme_bw(base_size = 20)
+
+```
+
+## Outra forma de ver distribuições (staked dot plot)
 
 &nbsp;
 
@@ -191,6 +203,7 @@ ggplot(elife, aes(expectativa)) +
   theme_bw(base_size = 20)
 
 ```
+
 
 ## Mediana da expectativa de vida
 
@@ -220,9 +233,9 @@ ggplot(elife, aes(expectativa)) +
 
 ## Média e Mediana
 
-Média: `r mean(elife$expectativa)`
+Média: `r round(mean(elife$expectativa), digits = 2)`
 
-Mediana: `r median(elife$expectativa)`
+Mediana: `r round(median(elife$expectativa), digits = 2)`
 
 ```{r, fig.width = 10, fig.height=4.2}
 dff <- elife %>% filter(expectativa == median(expectativa))
