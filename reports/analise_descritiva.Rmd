@@ -1,10 +1,13 @@
 ---
-title: "Análise Descritiva"
-subtitle: "Fabio Morais / FPPCC-UFCG"
-output: ioslides_presentation
-widescreen: true
-smaller: false
-fontsize: 20pt 
+title: "Estatística Descritiva"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+smaller: no
+fontsize: 20pt
+widescreen: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -72,10 +75,8 @@ head(elife, n = 10)
 
 Total de países nos dados: `r nrow(elife)`
 
-<!-- 
-Como ter um resumo simples desses dados? 
-Qual o número representativo da maior parte dos dados?
--->
+<!-- Como ter um resumo simples desses dados?  -->
+<!-- Qual o número representativo da maior parte dos dados? -->
 
 ## Dados: expectativa de vida
 
@@ -240,7 +241,7 @@ ggplot(elife, aes(expectativa)) +
   
 &nbsp;
 
-* Exemplo: A UFCG foi considerada a melhor instituição mais vezes do que as outras alternativas
+* Exemplo: O curso de Mestrado teve mais ocorrências do que as outras alternativas
 
 ## Percentis e Quartis
 
@@ -496,6 +497,41 @@ ggplot(dff %>% filter(type == "left"), aes(values)) +
   geom_vline(xintercept = getmode(lasym_values), color = "red")
 ```
   
+## Distribuição normal
+
+* Pontos concentrados no centro
+  + Diminuem progressivamente quando distancia-se do centro 
+
+* A curva é simétrica em torno do ponto central
+
+```{r, fig.align='center', fig.height=4.5}
+dff <- data.frame(values = rnorm(10000) * 10)
+bw = 2
+n_obs = sum(!is.na(dff$values))
+
+dff %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dff$values), sd = sd(dff$values)) * bw * n_obs) + 
+  theme_bw(base_size = 18) +
+  ylab("") + xlab("")
+```
+
+## Distribuição normal
+
+* A distribuição é bastante importante na estatística
+  + É comum assumir que a população é normalmente distribuída
+  + Os dados são selecionados aleatoriamente de uma distribuição normal
+
+```{r, fig.align='center', fig.height=4.5}
+dff %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dff$values), sd = sd(dff$values)) * bw * n_obs) + 
+  theme_bw(base_size = 18) +
+  ylab("") + xlab("")
+```
+
 ## Qual medida usar para sumarizar os dados? 
 
 * Moda é usada para variáveis categóricas  
@@ -523,7 +559,7 @@ ggplot(dff %>% filter(type == "left"), aes(values)) +
   + Ex.: 80% dos fenômenos naturais seguem esta distribuição
   
 <p align="center">
-  <img width="65%" src="../data/img/media.png">
+  <img width="60%" src="../data/img/media.png">
 </p>
   
 ## Impacto de outliers na média
@@ -534,5 +570,4 @@ summary(x)
 y <- c(1.2,1.3,1.5,1.4,1.5,1.4,1.5,1.6,1.5,1.4,1.5,1.6,1.7,1.5,1.3,1.4,1.5,1.5,10)
 summary(y)
 ```
-
 
