@@ -1,6 +1,7 @@
 ---
 title: "Análise de Correlação"
-subtitle: "Fabio Morais / FPPCC - UFCG"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais e Nazareno Andrade / PPGCC - UFCG"
 output: ioslides_presentation
 widescreen: true
 smaller: false
@@ -258,7 +259,7 @@ dff %>% summarise(pearson = cor(x, y, method = "pearson"),
   
 &nbsp;
   
-* Como dados normais e uma relação que parece linear
+* Com dados normais e uma relação que parece linear
   + Usar Pearson
 
 ## Correlaçoes e causalidade
