@@ -1,0 +1,605 @@
+---
+title: "Calculando Intervalos de Confiança"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+smaller: no
+fontsize: 20pt
+widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(readr)
+library(here)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(distributions3)
+
+library(gridExtra)
+library(grid)
+
+library(moments)
+
+theme_set(theme_bw(base_size = 18))
+```
+
+## Relembrando Intervalos de Confiança - ICs
+
+* ICs são um intervalo de estimativa com uma incerteza associada  
+
+  + Um nível de confiança de $C\%$ que influencia na margem de erro (MoE)  
+  
+  + Para $C\%$ dos casos o valor da população ($\mu$) estará dentro do intervalo
+
+<br>
+
+* O valor da população ($\mu$) é desconhecido e $M$ é uma estimativa para ele, com uma margem de erro associada
+  
+$$\left [M - MoE, M + MoE \right ]$$
+
+<br>
+
+* A MoE é o maior erro de estimativa provável ($M - \mu$)
+
+## Características de distribuição dos dados
+
+* Para o cálculo de ICs os dados devem ser normais (aproximadamente)
+  + Distribuição amostral normal ou aproximadamente normal
+
+<br>
+
+* Amostras que seguem uma distribuição normal ou aproximadamente normal  
+
+  + Os elementos da amostra são independentes
+  + A amostra é selecionada de uma população normalmente distribuída
+  + A mostra possui muitos elementos ($N \ge 30$)
+  + A distribuição amostral não pode ser fortemente assimétrica
+  
+## ICs da média com $\sigma$ conhecido
+
+* Caso em que a variância da população é conhecida
+  + $\sigma$ é a raiz quadrada da variância
+  + Normalmente não é conhecida
+  
+<br>
+
+* Estimativa $M$ da média da população $\mu$, com 95\% de confiança
+  + $z_{95\%} = 1.96$ 
+  
+$$\left [M - 1.96 \times \frac{\sigma}{\sqrt{N}}, M + 1.96 \times \frac{\sigma}{\sqrt{N}} \right ]$$
+
+## Exemplo IC da média em R ($\sigma$ conhecido)
+
+* O tempo médio estimado de produção de um produto de 19.9 ($M = 19.9$)
+* Amostra de 36 produtos produzidos ($N = 36$)
+* A população possui um desvio padrão conhecido ($\sigma = 5.73$)
+
+```{r, echo = TRUE}
+M <- 19.9
+N <- 36
+sigma <- 5.73
+alpha <- 1 - 0.95 # Baseado no nível de confiança
+```
+
+<br>
+<center>
+Qual o IC com 95% de nível de confiança? 
+</center>
+
+## Exemplo IC da média em R ($\sigma$ conhecido)
+
+<center>
+Qual o IC com 95% de nível de confiança? 
+</center>
+<br>
+
+```{r, echo = TRUE}
+z <- Normal(0, 1) # Normal padrão
+z_95 <- quantile(z, alpha / 2)
+MoE <- z_95 * sigma / sqrt(N)
+MoE
+```
+
+```{r, echo = TRUE}
+M
+```
+
+IC de 95% com $M \pm MoE$: $\left [ `r round(M + MoE, digits = 2)`, `r round(M - MoE, digits = 2)` \right ]$
+
+## ICs da média com $\sigma$ desconhecido
+
+* Caso em que a variância da população é conhecida
+  + $\sigma$ é estimado pelo desvio padrão amostral $s$
+  + Aproximação da normal pela distribuição *t-student*
+  
+<br>
+
+* Estimativa $M$ da média da população $\mu$, com 95\% de confiança ($t_{95\%}(df)$) 
+  
+$$\left [M - t_{95\%}(df) \times \frac{s}{\sqrt{N}}, M + t_{95\%}(df) \times \frac{s}{\sqrt{N}} \right ]$$
+
+
+## Exemplo IC da média em R ($\sigma$ desconhecido)
+
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+producao <- read_csv(here("data/exemplo_ic.csv"))
+```
+
+* O tempo de produção de um produto com 36 medições ($N = 36$)
+* O desvio padrão da amostra é $s = `r round(sd(producao$prod), digits = 2)`$ 
+  + A população não possui um desvio padrão conhecido
+  
+```{r, echo = TRUE}
+M <- mean(producao$prod)
+N <- nrow(producao)
+s <- round(sd(producao$prod), digits = 2)
+alpha <- 1 - 0.95 # Baseado no nível de confiança
+df <- N - 1 # Graus de liberdade
+```
+
+<br>
+<center>
+Qual o IC com 95% de nível de confiança? 
+</center>
+
+## Exemplo IC da média em R ($\sigma$ conhecido)
+
+<center>
+Qual o IC com 95% de nível de confiança? 
+</center>
+<br>
+
+```{r, echo = TRUE}
+t <- StudentsT(df) # grus de liberdade (df)
+t_95 <- quantile(t, alpha / 2)
+MoE <- t_95 * s / sqrt(N)
+MoE
+```
+
+```{r, echo = TRUE}
+M
+```
+
+IC de 95% com $M \pm MoE$: $\left [ `r round(M + MoE, digits = 2)`, `r round(M - MoE, digits = 2)` \right ]$
+  
+## Exemplo IC da média em R ($\sigma$ desconhecido)
+
+* Outra forma de calcular o IC no R
+
+```{r, echo = TRUE, highlight.output = TRUE, highlight.output = c(5)}
+t.test(producao$prod, conf.level = .95)
+```
+
+* Observe df, limites do intervalo (inferior e superior) e a média
+
+## E quando os dados não seguem a normal?
+
+* A distribuição amostral da média de um número de variáveis independentes é aproximadamente normal (Teorema do Limite Central)
+
+<p align="center">
+  <img width="80%" src="data/img/amostra_medias.png">
+</p>
+
+* Mesmo para dados da população que não são normalmente distribuídos
+
+## ICs com bootstrap
+
+* Realizar cálculos sobre os próprios dados para estimar a **variação das estatísticas** que são calculadas a patir dos mesmos dados
+
+<br>
+
+* Exemplo: calcular médias dos dados para estimar a variancia da média dos dados em relação a média da população
+  + Distribuição amostral de médias
+
+<br>
+
+* Utilizada para calcular a variação em torno de uma estimativa (MoE) 
+  + Exemplo: intervalo de confiança da média
+
+<br> 
+
+* Aplicável para outras estatísticas: mediana, percentis, desvio padrão, etc.
+
+## Reamostragem dos dados da amostra
+
+```{r}
+lastfm = read_csv(here("data/experimento-lastfm.csv"), 
+                  col_types = cols(.default = col_double(), 
+                                   user = col_character()))
+```
+
+* Considere uma amostra com o número de novos artistas escutados no lastfm  
+
+  + Uma amostra com `r nrow(lastfm)` observações
+
+<br>
+
+* É possível gerar diferentes amostras da amostra inicial (reamostragem)  
+  
+  + Seleção de elementos da amostra inicial
+  + Cada amostra tem um valor diferente de média calculada
+
+<br>
+
+* Existe uma variação entre as médias calculadas a partir da reamostragem  
+
+  + Essa variação é uma estimativa da variação da média da amostra inicial
+    
+## Exemplo de reamostragem
+
+* O cáculo da média para amostras de tamanho $n$ igual a 100
+  + Existe uma variação entre as médias calculadas
+
+```{r, echo = TRUE}
+lastfm %>% pull(news) %>% sample(100) %>% mean()
+lastfm %>% pull(news) %>% sample(100) %>% mean()
+lastfm %>% pull(news) %>% sample(100) %>% mean()
+```
+
+## Distribição amostral da média
+
+* Para um número elevado de reamostragens a variação fica mais evidente
+  + Gera uma distribuição amostral da métrica calculada 
+  + Podem ser outras métricas: mediana, percentis, desvio padrão, etc.
+
+<br>
+
+* Exemplo: distribuição amostral das médias
+  + 1000 reamostragens com tamanho $n = 100$
+
+```{r}
+set.seed(1)
+```
+
+```{r,echo=TRUE}
+amostras = data.frame(index_amostra = 1:1000) %>% # 1000 amostras
+  mutate(media = map_dbl(index_amostra, ~ lastfm %>% 
+                           pull(news) %>% 
+                           sample(100) %>% # tamanho de cada amostra
+                           mean()))
+```
+
+## Estimativa de variação da média original
+
+```{r, echo = TRUE, fig.align="center"}
+amostras %>% ggplot(aes(media)) +
+  geom_histogram(binwidth = .5, fill = "darkgrey") +
+  geom_vline(xintercept = mean(lastfm$news)) # média calculada com a amostra original
+```
+
+## O tamanho das amostras da reamostragem
+
+```{r}
+amostras = data.frame(index_amostra = 1:1000) %>% # faremos 1000 vezes
+  mutate(media = map_dbl(index_amostra, ~ lastfm %>% 
+                           pull(news) %>% 
+                           sample(10) %>% 
+                           mean()))
+```
+
+* Reamostragens com tamanho menor geram maior variação (exemplo $n = 10$)
+  
+```{r, fig.height=4, fig.align="center"}
+amostras %>% ggplot(aes(media)) +
+  geom_histogram(binwidth = .5, fill = "darkgrey") +
+  geom_vline(xintercept = mean(lastfm$news)) # média calculada com a amostra original
+```
+
+* A reamostragens devem ter o mesmo tamanho da amostra original!
+
+## Como gerar amostras com o mesmo tamanho $n$?
+
+* Realizar reamostragem com reposição dos elementos  
+
+* Após cada seleção de um elemento ele é reposto no conjunto
+
+<br>
+
+```{r, echo = TRUE, results=FALSE}
+n <- nrow(lastfm)
+sample(lastfm$news,
+       size = n, 
+       replace = TRUE) # aqui é o bootstrap
+```
+
+## O princípio do bootstrap
+
+1. $x_1, x_2, ..., x_n$ é uma amostra de dados com distribuição desconhecida
+
+2. $u$ é a métrica calculada dessa amostra (exemplo a média $M$)  
+
+3. $x_1^*, x_2^*, ..., x_n^*$ é o dado de uma reamostragem (mesmo tamanho da orginal)  
+
+5. $u^*$ é a métrica calculada da reamostragem (média das amostras)
+
+<br> 
+
+* Então a variação de $u^*$ é uma boa estimativa para a variação de $u$  
+
+* $u^*$ pode ser usado para calcular a margem de erro na amostra original
+  + Estimar a variação de $u$ em relação à metrica na população
+  + Exemplo: a variação de $M$ relação a média populacional $\mu$ ($M - \mu$)
+
+## ICs com bootstrap
+
+* Considerando uma estimativa $M$ da média populacional $\mu$ 
+
+* O cálculo do IC necessita do erro de estimativa $\delta$ dado por $M - \mu$ 
+
+* Um intervalo de confianca de 90% é definido com base na distribuição de $\delta$
+
+$$\left [M - \delta_{5\%}, M - \delta_{95\%} \right ]$$  
+
+* Onde:
+  + $\delta_{5\%}$ é o 5-percentil dos valores de $\delta$  
+  
+  + $\delta_{95\%}$ é o 95-percentil dos valores de $\delta$ 
+  
+## A distribuição de $\delta$ não é conhecida
+
+* A distribuição de $\delta$ é definida por $\mu$ que não é conhecida
+
+* A diferença $\delta^*$ entre $M - u^*$ é usada para estimar $\delta$
+  + $u^*$ é a métrica calculada da reamostragem
+
+$$\delta^* = M - u^*$$
+
+* Um intervalo de confianca de 90% é definido com base na distribuição de $\delta^*$, que consiste em uma estimativa de $\delta$ a partir da reamostragem
+
+$$\left [M - \delta^*_{5\%}, M - \delta^*_{95\%} \right ]$$  
+
+* Onde $\delta_{\%}$ são os percentis calculados com base nos valores de $\delta^*$ e $\alpha$
+  + $\alpha = 1 - C%$, onde $C%$ é o nível de confiança
+  
+## Resumindo IC com bootstrap
+
+* Um intervalo de confiança de $C\%$ é dado por: 
+
+$$\left [M - \delta^*_{\frac{\alpha}{2}}, M - \delta^*_{1 - \frac{\alpha}{2}} \right ]$$  
+
+<br>
+
+* $\delta^*$ são os valores da diferença entre a métrica $M$ da população original e a métrica $u^*$ da reamostragem
+
+$$\delta^* = M - u^*$$
+
+## Exemplo IC com bootstrap em R
+
+* Considerando dados do número de novos artistas escutados no lastfm  
+
+* Uma amostra original com $500$ elementos ($n = 500$)  
+
+```{r}
+set.seed(3)
+```
+
+```{r, echo = TRUE}
+n <- 500
+amostra = lastfm %>%  
+  sample_n(n) %>% 
+  pull(news)
+```
+
+* A média $M$ da amostra original da população
+
+```{r, echo = TRUE}
+M = mean(amostra)
+M
+```
+
+## Função para cálculo da média com bootstrap
+
+* A partir de uma amostra $x$ realizar reamostragens do mesmo tamanho de $x$
+ 
+* Calcular a média da nova amostra e retornar o valor 
+
+```{r, echo = TRUE}
+um_bootstrap <- function(x){
+  boot_x <- sample(x,
+                   size = NROW(x), 
+                   replace = TRUE) # aqui é o bootstrap
+  return(mean(boot_x))
+}
+```
+
+* Definir o número de reamostragens
+  + 10 mil repetições gera estimativas significativamente acuradas de $\delta^*$
+  
+```{r, echo = TRUE}
+repeticoes <- 10000 # não menor que 2 mil 
+```
+
+## Reamostragem a partir de uma amostra inicial
+
+* Realiza uma amostragem para cada repetição $i$ e calcula a média 
+
+```{r, echo=TRUE}
+experimentos = tibble(i = 1:repeticoes) %>% group_by(i) %>% 
+  mutate(media_bootstrap = map_dbl(i, ~ um_bootstrap(amostra)))
+```
+
+```{r, fig.height=4, fig.align="center"}
+ggplot(experimentos, aes(x = media_bootstrap)) + 
+  geom_histogram(binwidth = 0.3, colour = "darkorange", fill = "white")
+```
+
+## Calculando o IC
+
+* Calcula os valores de $\delta^*$ e a margem de erro a partir dos percentis
+
+* Calcula os limites do IC com base na média da amostra inicial 
+
+```{r, echo = TRUE}
+alpha = 0.05
+
+cis = experimentos %>%  ungroup() %>% 
+  mutate(diferenca = media_bootstrap - M) %>%
+  summarise(l = stats::quantile(diferenca, probs = alpha/2), 
+            u = stats::quantile(diferenca, probs = 1 - alpha/2)) %>% 
+  mutate(ci_lower = M - u, 
+         ci_upper = M - l)
+cis
+```
+
+## A estimativa e os demais valores
+
+* <span style="color:red">Média populacional</span>, <span style="color:darkgreen">média da amostra inicial</span> e <span style="color:darkblue">limites do IC</span> calculados com base na reamostragem
+
+```{r, fig.align="center", fig.width=9}
+ggplot(experimentos, aes(x = media_bootstrap)) + 
+  geom_histogram(binwidth = 0.3, colour = "darkorange", fill = "white") + 
+  geom_vline(aes(xintercept = cis$ci_lower), colour = "blue", size = 1) + 
+  geom_vline(aes(xintercept = cis$ci_upper), colour = "blue", size = 1) + 
+  geom_vline(aes(xintercept = M), colour = "darkgreen", size = 1) + 
+  geom_vline(aes(xintercept = mean(lastfm$news)), colour = "red", size = 1) + 
+  scale_x_continuous(breaks = seq(25, 40))
+```
+
+## Outros tipos de Intervalos de Confiança
+
+* Intervalo de confiança para proporção
+
+* Intervalo de confiança para taxa 
+
+* Intervalo de confiança para variância
+
+* Intervalo de confiança para a diferença
+
+* Material resumuido sobre outros tipos de ICs
+  + http://www.portalaction.com.br/inferencia/intervalo-de-confianca
+
+## Normalidade 
+
+* Como saber se os dados são normais ou aproximadamente normais?
+
+  + Método visual 
+  
+  + Quantificação
+  
+  + Testes estatísticos
+
+## Método visual 
+
+* Histogramas e distribuições dos dados  
+
+  + Qual das distribuições é normal?
+  
+```{r}
+dsin <- data.frame(values = rnorm(5000) * 10, type = "normal")
+dpos <- data.frame(values = rweibull(5000, shape=1.7, scale = 10) * 10, type = "positiva")
+```
+
+```{r, fig.align="center", fig.width=10}
+bw1 = 1
+p1 <- dsin %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw1, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dsin$values), sd = sd(dsin$values)) * bw1 * 5000) + 
+  theme_bw(base_size = 14) +
+  ylab("") + xlab("") + 
+  ggtitle("Dist 1")
+
+bw2 = 4
+p2 <- dpos %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw2, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dpos$values), sd = sd(dpos$values)) * bw2 * 5000) + 
+  theme_bw(base_size = 14) +
+  ylab("") + xlab("") + 
+  ggtitle("Dist 2")
+  
+
+grid.arrange(p1, p2, ncol = 2)
+```
+  
+## Método visual 
+
+* qqplot: valores cumulativos dos dados vs. distribuição desejada (normal)
+  + A distribuição 2 apresenta uma assimetria
+  
+```{r, warning=FALSE, fig.align="center", fig.width=10}
+p1 <- qplot(sample = dsin$values, stat = "qq") + 
+  ggtitle("Dist 1")
+
+p2 <- qplot(sample = dpos$values, stat = "qq") + 
+  ggtitle("Dist 2")
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## Quantificação de simetria 
+
+```{r}
+Dist1 <- dsin$values
+Dist2 <- dpos$values
+```
+
+* O skewness impacta na normalidade (positivo ou negativo)  
+
+  + A normal é perfeitamente simétrica, $skw = 0$
+  + $skw < 0$ indica cauda esquerda maior
+  + $skw > 0$ indica cauda direita maior
+
+```{r, echo = TRUE}
+skewness(Dist1)
+skewness(Dist2)
+```
+
+## Testes de adequação à normalidade
+
+* Testes de hipótese com hipótese nula ($H_0$) e hipótese alternativa ($H_1$)
+
+  + $H_0$:	Os	dados	vêm	de uma	população	que	tem	distribuição	normal  
+  
+  + $H_1$:	Os	dados	não	vêm	de uma população	que tem	distribuição	normal
+			
+* Se *p-value* $< \alpha$ a hipótese $H_0$ é rejeitada	 			
+
+* Testes mais conhecidos:
+  + Shapiro-Wilk
+  + Anderson-Darling
+  + Kolmogorov-Smirnov
+  
+## Shapiro-Wilk
+
+* Amostras pequenas e médias
+
+```{r, echo = TRUE}
+shapiro.test(Dist1)
+shapiro.test(Dist2)
+```
+
+## Anderson Darling
+
+```{r}
+library(nortest)
+```
+
+* Bastante poderoso para detectar não-normalidade (sensível a caudas)
+
+```{r, echo = TRUE}
+ad.test(Dist1)
+ad.test(Dist2)
+```
+
+## Kolmogorov-Smirnov
+
+* Realiza a comparação da diferença entre duas distribuições
+  + Exemplo: comparação entre Dist2 e uma normal  
+  
+<br>
+ 
+* $H_0$ afirma que as duas distribuições são iguais
+    
+```{r}
+ks.test(Dist2, "rnorm")
+```
+
+# Calculando Intervalos<br>de Confiança
+<br><br><br><br><br><br>
+Fundamentos de Pesquisa em Ciência da Computação II

@@ -1,0 +1,500 @@
+---
+title: "Testes de Hipótese,<br> p-Valores e ICs "
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+header-includes:
+- \usepackage{caption}
+smaller: no
+fontsize: 20pt
+widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(readr)
+library(here)
+library(dplyr)
+library(ggplot2)
+
+theme_set(theme_bw(base_size = 18))
+```
+
+## ICs em uma pesquisa de opinião
+
+* O apoio estimado do público para a Proposição A é de 53%  
+
+* Em uma pesquisa com uma margem de erro de 2%
+
+&nbsp;
+
+<center>
+**"53% de apoio, Intervalo de Confiança (IC) de 95% [51, 55]"**
+</center>
+
+&nbsp;
+
+&nbsp;
+
+<p align="center">
+  <img width="90%" src="data/img/ic_example.png">
+</p>
+
+## ICs em uma pesquisa de opinião
+
+<center>
+**"53% de apoio, Intervalo de Confiança (IC) de 95% [51, 55]"**
+</center>
+
+&nbsp;
+
+* Valores próximos de 53% são estimativas mais plausíveis do apoio da população  
+
+  + Valores distantes do centro são progressivamente menos plausíveis  
+  
+  + Valores fora do intervalo (ex. 50% e 56%) não são plausíveis  
+
+* Tenha em mente que o IC pode não capturar o valor real da população
+
+&nbsp;
+
+<center>
+**O que queremos verficar com a pesquisa de opinião?**
+</center>
+
+## Hipóteses
+
+* Uma afirmação sobre o valor de um parâmetro populacional  
+
+  + Pode ser verificada com base em observação
+  
+  + Deve ser refutável / pode ser rejaitada
+  
+    + Exemplo: A idade média da turma é maior que 25 anos
+  
+&nbsp;
+
+* Exemplo: **A proposição A será aprovada**.
+  
+  + A proporção ($\rho$) de apoio a A na população é maior que 50%
+  
+  + Formalmente: $\rho > 50\%$
+
+* Exemplo: **O apoio à proposição A será de 45% ($\rho = 45\%$)**.
+
+## Exemplos de hipótese em Computação
+
+É comum a comparação de médias:
+
+<br>
+
+* A média de defeitos aplicando a técnica A de inspeção em relação a técnica B 
+
+<br>
+
+* A média de tempo para executar uma tarefa programando sozinho ou usando *pair programming*
+
+<br>
+
+* O tempo médio de envio de pacotes considerando várias topologias de rede
+
+## Teste de Hipóteses
+
+* Abordagem tradicional de estatística inferencial  
+
+  + Inferir algo sobre a população com base em uma hipótese  
+  
+  + Verificar hipóteses com base em uma amostra representativa
+  
+<br>
+
+* Baseia-se em três etapas:
+
+  + 1º Definir uma hipótese a ser verificada
+  
+  + 2º Calcular o p-valor com base na amostra
+  
+  + 3º Decidir se a hipótese definida deve ser rejeitada
+
+## 1º Definir uma hipótese a ser verificada
+
+* Estabelcer uma afirmação sobre um valor da população  
+
+  + Pode ser verificar e rejeitada
+  
+* A hipótese cética é chamada de *nula* ($H_0$)  
+
+  + Espera-se que essa hipótese seja rejeitada (sem efeito)
+  
+* A hipótese otimista é chamada de *alternativa* ($H_1$)  
+
+  + Diferente / oposto de $H_0$ (existe um efeito) 
+
+<br>
+
+* Exemplo:
+  + $H_0$: A proposição A não será aprovada ($\rho \leq 50\%$)
+  + $H_1$: A proposição A será aprovada ($\rho > 50\%$)
+  
+## 2º Calcular o p-valor com base na amostra
+
+* Calculado a partir dos dados amostrais usando um teste estatístico  
+
+  + Considerando um erro de estimativa  
+
+<br>
+
+* O cálculo do p-valor assume que $H_0$ é verdadeira  
+
+  + Informalmente mede o quão plausível é a estimativa sobre a população  
+  
+  + p-valores pequenos levantam dúvidas sobre a hipótese nula  
+  
+  + Exemplo: Se a hipótese é de apoio igual a 50%, um p-valor muito pequeno indica que a estimativa (IC 53% [51, 55]) não é plausível de ser verdade  
+  
+* O p-valor reflete os dados da amostra e a $H_0$ escolhida  
+
+## 3º Decidir se a hipótese deve ser rejeitada
+
+* O nível de significância $\alpha$ é o critério para decidir sobre a hipótese $H_0$  
+
+  + O teste de hipótese compara o p-valor com $\alpha$
+  + Em geral, o nível de significância é de 0.05 ou 5%
+
+<br>
+
+* Se o p-valor $< \alpha$ então $H_0$ **é rejeitada**  
+
+  + Existe um efeito estatisticamente significativo  
+  
+  + Nesse caso, a hipótese alternativa $H_1$ ganha força  
+
+* Se o p-valor $> \alpha$ então $H_0$ **não é rejeitada**  
+
+  + É diferente de dizer que $H_0$ é aceita  
+  
+## Nível de significância $\alpha$
+
+* Utiliza-se o menor valor que permite rejeitar $H_0$  
+
+  + Rejeitar em um nível mais baixo fornece um resultado mais convincente  
+  
+  + Por exemplo: 0.01 em vez de 0.05  
+  
+<center>
+*O efeito foi estatisticamente significante com nível de 0.01 (ou 0.05)*
+</center>
+
+<br> 
+
+* Para se usar um nível de significância menor é preciso um p-valor pequeno  
+
+  + Quanto menor o p-valor menos plausível é a estimativa se $H_0$ é verdade  
+  
+    + Maior é a razão para duvidar de $H_0$ para estimativa existente (IC)
+
+
+## Tamanho do efeito
+
+* A hipótese alternativa $H_1$ indica um **efeito** esperado na população  
+
+  + Também pode diferenciar duas populações  
+  
+<br>
+
+* O efeito pode ser forte, médio ou fraco  
+
+  + O tempo de execução de algoritmos diferentes pode quase não variar
+  + O tempo de execução do segundo algoritmo é muito menor  
+
+<br>
+
+* Se o efeito é forte, maior é a chance de observá-lo em uma amostra  
+
+  + Comparar p-valor e $\alpha$ nem sempre é suficiente
+
+## Tipos de erros
+
+* **Falso positivo: erro tipo I ($\alpha$)**  
+  
+  + Probabilidade de rejeitar $H_0$ quando ela é verdadeira
+  
+  + O teste mostra um efeito / significância quando na verdade não existe
+  
+  $$\alpha = \text{Probabilidade}(\text{rejeitar } H_0 | H_0 = \text{true})$$
+
+* **Falso negativo: erro tipo II ($\beta$)**  
+
+  + Probabilidade de não rejeitar $H_0$ quando ela é falsa  
+  
+  + O teste não mostra efeito / significância quando na verdade existe
+
+  $$\beta = \text{Probabilidade}(\text{não rejeitar } H_0 | H_1 = \text{true})$$
+
+## Tipos de erros
+
+<br><br>
+
+```{r table-simple, echo=FALSE, message=FALSE, warnings=FALSE, results='asis'}
+require(pander)
+panderOptions('table.split.table', Inf)
+my.data <- "
+  Verdade  | Rejeita $H_0$   | Não rejeita $H_0$
+  $H_0$    | **Erro tipo I** | Ok 
+  $H_1$    | Ok              | **Erro tipo II**"
+df <- read.delim(textConnection(my.data),header=FALSE,sep="|",strip.white=TRUE,stringsAsFactors=FALSE)
+names(df) <- unname(as.list(df[1,])) # put headers on
+df <- df[-1,] # remove first row
+row.names(df)<-NULL
+pander(df, style = 'rmarkdown')
+```
+
+## Poder estatístico do teste
+
+* $\beta$: probabilidade de erro do tipo II
+
+  $$\beta = \text{Probabilidade}(\text{não rejeitar } H_0 | H_1 = \text{true})$$
+
+<br>
+
+* $1 - \beta$ indica o poder da inferência  
+
+  + Probabilidade de rejeitar corretamente a hipótese nula
+  
+  $$\text{Probabilidade}(\text{rejeitar } H_0 | H_0 = \text{false})$$
+  
+  
+## Teste de hipótese, p-valores e ICs
+
+* É normal realizar testes de hipótese sem considerar ICs  
+
+  + Apenas calcula-se o p-valor e verifica-se o nível de significância  
+
+<br>
+
+* No entanto, existe uma relação entre a estimativa do IC, $H_0$ e p-valor
+
+* Exemplo: nível de significância de 0.05 e IC com nível de confiança de 95%
+
+<p align="center">
+  <img width="90%" src="data/img/ic_pvalor.png">
+</p>
+
+
+## Teste de hipótese, p-valores e ICs
+
+* Exemplo: nível de significância de 0.05 e IC com nível de confiança de 95%
+
+<p align="center">
+  <img width="90%" src="data/img/ic_pvalor.png">
+</p>
+
+* Se $H_0$ está **fora** do IC de 95%, o p-valor é **menor** que 0.05  
+
+  + Então o p-valor $< \alpha$ e $H_0$ **é rejeitada**  
+
+* Se $H_0$ está **dentro** do IC de 95%, o p-valor é **maior** que 0.05  
+
+  + Então $H_0$ **não é rejeitada**
+  
+## Calculando p-valores
+
+* O p-valor é calculado por meio de um modelo estatístico (teste estatístico)  
+
+  + A partir de uma distribuição conhecida  
+
+* Para a distribuição normal o cálculo é baseado no z-score  
+
+  + Onde $\sigma$ é conhecido (desvio padrão da população)  
+  
+  $$z = \frac{(M - \mu)}{\sigma/\sqrt{N}}$$
+
+* Como assume-se $H_0$ verdadeira, o valor de interesse na população $\mu$ é igual a $\mu_0$, o valor de $H_O$. Logo:
+
+  $$z = \frac{(M - \mu_0)}{\sigma/\sqrt{N}}$$
+
+## Exemplo: p-valor para normal e $\sigma$ conhecido
+
+* $H_0$: a média da população $\mu$ é igual a 50 ($\mu_0 = 50$)  
+  
+* A média $M$ dos dados é de 57.8 para uma amosta de tamanho 30
+
+* O desvio padrão da população é conhecido: $\sigma = 20$
+
+$$z = \frac{57.8 - 50}{20 / \sqrt{30}} = 2.136$$
+
+<br>
+
+
+* Se $H_0$ é verdade, qual a probabilidade de se obter essa quantidade de desvio ou mais? ($z \ge 2.136$ ou $z \leq -2.136$)
+  
+  + Qual a probabilidade de obter $M \ge 57.8$ ou $M \leq 42.2$
+  
+
+## Exemplo: p-valor para normal e $\sigma$ conhecido
+  
+* Essa probabilidade é dada pela área abaixo da curva da normal padrão
+  + Para $z = 2.136$ a probabilidade (p-valor) é de $0.0327$
+
+<p align="center">
+  <img width="75%" src="data/img/pvalor-z.png">
+</p>
+
+* Para $\alpha = 0.05$ a hipótese $H_0$ de $\mu_0 = 50$ é rejeitada
+  + A hipótese alternativa $H_1$, de $\mu \neq 50$, é reforçada
+
+## Calculando p-valores com $\sigma$ desconhecido
+
+* Realiza-se uma aproximação por meio da distribuição t-student
+
+* Considere o mesmo exemplo anterior com $\sigma$ desconhecido  
+
+  + O desvio padrão $s$ da amostra pode ser calculado ($s = 23.5$)
+  
+
+  $$t = \frac{(M - \mu_0)}{s/\sqrt{N}} = \frac{(57.8 - 50)}{23.5/\sqrt{30}} = 1.818$$
+
+<br>
+
+* Se $H_0$ é verdade, qual a probabilidade de se obter essa quantidade de desvio ou mais? ($t \ge 1.818$ ou $t \leq -1.818$)
+
+## Exemplo: p-valor para $\sigma$ desconhecido
+
+* A probabilidade (p-valor) é dado pela área abaixo da curva distribuição t
+  + Considerando $N-1$ graus de liberdade
+
+<p align="center">
+  <img width="75%" src="data/img/pvalor-t.png">
+</p>
+
+* O p-valor é de 0.0794 e para $\alpha = 0.05$ $H_0$ não pode ser rejeitada
+
+## Hipóteses bilaterais e unilaterais
+
+* Os exemplos anteriores foram hipóteses bilaterais (two-tailed)  
+
+  + Verifica-se desvios extremos maiores que $z$ ou menores que $-z$ 
+  
+<br>
+
+* p-valores bilaterais incluem valores mais extremos que o considerado em ambas as direções: positiva e negativa  
+
+  + Hipótese nula $H_0$: $\mu = X$ e hipótese alternativa $H_1$: $\mu \neq X$
+
+<br>
+
+* p-valores unilaterais incluem valores mais extremos em uma direção  
+
+  + $H_0$: $\mu = X$ e $H_1$: $\mu > X$ 
+  
+  + Essa direção deve ser previamente estabeleciada
+
+## Pontos importantes
+
+* Cuidado com conclusões / questões binárias.  
+  
+  + Podem passar a falsa sensação de certeza
+  
+  + Prefira questões que expressam a estimativa (quando A é maior que B)
+  
+* Seu resultado é **estatisticamente significativo** e não significativo  
+
+* Um p-valor grande não significa que $H_0$ é verdade
+  
+  + Não é possível rejeitar $H_0$
+  
+* p-valor não é a probabilidade de $H_0$ ser verdade
+
+
+## Exemplo em R de teste de hipótese, p-valor e IC
+
+```{r, warning=FALSE, echo=FALSE, message=FALSE}
+producao <- read_csv(here("data/exemplo_ic.csv"))
+```
+
+* Exemplo com dados aproximadamente normais (aproximação por t-student)
+
+  + O tempo de produção de um produto com 36 medições ($N = 36$) 
+  + O desvio padrão da população não é conhecido ($s = `r round(sd(producao$prod), digits = 2)`$)
+  
+```{r, echo = TRUE}
+mean(producao$prod)
+```
+
+```{r, echo = TRUE}
+round(sd(producao$prod), digits = 2)
+```
+
+## Teste de hipótese (bilateral)
+
+* A hipóteses definidas:
+
+  + $H_0$: o tempo médio de produção da população é igual a 50 ($\mu = 50$)
+  + $H_1$: o tempo médio de produção da população é diferente de 50 ($\mu \neq 50$)
+
+* Nível de significância $\alpha = 0.05$  
+  
+  + Nível de confiança $C = 1 - \alpha = 0.95$
+
+```{r, echo = TRUE}
+mu <- 50
+alpha <- 0.05
+clevel <- 1 - alpha
+```
+## Teste de hipótese (bilateral)
+
+```{r, echo = TRUE}
+t.test(producao$prod, mu = mu, conf.level = clevel)
+```
+
+* p-valor $< 2.2^{-16} < \alpha$, então $H_0$ é rejeitada  
+
+  + $H_1$: a média populacional é diferente de 50 (hipótese fortalecida)
+
+## $H_0$: $\mu = 50$ e $H_1$: $\mu < 50$
+
+```{r, echo = TRUE}
+t.test(producao$prod, mu = mu, conf.level = clevel, alternative = "less")
+```
+
+* p-valor $< 2.2^{-16} < \alpha$, então $H_0$ é rejeitada  
+
+  + $H_1$: a média populacional é menor que 50 (hipótese fortalecida)
+  
+## $H_0$: $\mu = 50$ e $H_1$: $\mu > 50$
+
+```{r, echo = TRUE}
+t.test(producao$prod, mu = mu, conf.level = clevel, alternative = "greater")
+```
+
+* p-valor $= 1 > \alpha$, então $H_0$ não é rejeitada  
+
+  + Não há efeito verificado
+
+## $H_0$: $\mu = 22$ e $H_1$: $\mu \neq 22$
+
+```{r, echo = TRUE}
+mu <- 22
+t.test(producao$prod, mu = mu, conf.level = clevel)
+```
+
+* p-valor $= 0.5024 > \alpha$, então $H_0$ não é rejeitada  
+  + Não é possível descartar uma média populacional igual a 22
+  
+## Pontos para refletir
+
+* E se o $\alpha$ for maior? e menor?
+
+* E se o $N$ for maior? 
+
+* E se o desvio padrão $s$ for maior? e menor?
+
+* O que ocorre no efeito?
+
+
+# Testes de Hipótese,<br> p-Valores e ICs
+<br><br><br><br><br><br>
+Fundamentos de Pesquisa em Ciência da Computação II

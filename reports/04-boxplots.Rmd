@@ -1,0 +1,216 @@
+---
+title: "Boxplots e Visualização"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais e Nazareno Andrade / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+smaller: no
+fontsize: 20pt
+widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+theme_set(theme_bw(base_size = 18))
+```
+
+## Relembrando Boxplots
+
+* Apresenta um sumário da distribuição dos dados
+  + Auxilía na análise descritiva dos dados
+
+&nbsp;
+
+* Diferentes tipos de métricas e tendências
+  + Valores individuais: Q1, Q2, Q3, Mínimo, Máximo e Outiliers
+  + Tendência central (location): mediana (Q2)
+  + Dispersão (spread): IQR, Range
+  + Formato (skewness)
+  
+## Sumário de métricas
+
+* Mínimo: menor valor excluindo outliers
+
+* Máximo: maior valor excluindo outliers
+
+* Mediana (Q2 ou 50-percentil): divide os dados pela metade
+
+* 1º Quartil (Q1 ou 25-percentil)
+
+* 3º Quartil (Q3 ou 75-percentil)
+
+* Intervalo interquartil (IQR): distância entre o quartil superior e inferior
+  + $IQR = Q3 - Q1$
+
+* $Range = \text{Máximo} - \text{Mínimo}$
+
+## Outliers
+
+* Valores distantes da tendência central da distribuição
+  + Quando detectados, estão presentes no boxplot
+
+&nbsp;
+
+* Métrica padrão para detecção de outliers (nem sempre é boa)
+  + Outliers superiores: $Q3 + 1.5 \times IQR$
+  + Outliers inferiores: $Q1 - 1.5 \times IQR$
+  
+&nbsp;
+
+* Devem ser verificados caso a caso
+
+## Exemplo de Boxplot
+
+<p align="center">
+  <img width="55%" src="data/img/boxplot.png">
+</p>
+
+## Gerando boxplots (ggplot2)
+
+```{r, echo=FALSE, message=FALSE}
+starwars = starwars %>% 
+    mutate(species_short = if_else(species %in% c("Human", "Droid"), species, "Other"), 
+           n_films = map_dbl(films, length)) %>% 
+    filter(!is.na(height))
+```
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot() 
+```
+
+<footnote>Versão original do [material](https://rpubs.com/nazareno/dicas-boxplots)</footnote>
+
+## Definindo um único X
+
+* O x = "" no código anterior define um único ponto do eixo X
+  + Um único boxplot para todos os valores (independente das categorias)
+  + Todos os valores de altura ficarão nesse ponto
+  
+```{r, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot()
+```
+
+## Problemas do boxplot anterior
+
+* A **caixa** é bastante **larga**
+
+&nbsp;
+
+* Não é possível **ver todos os pontos**
+
+&nbsp;
+
+* Por que apenas **alguns pontos** estão **destacadaos** (outliers)?
+
+&nbsp;
+
+* A audiência sabe como definir as linhas fora da caixa e outliers?
+  + Essa visualização pode confundir e não ajudar
+  
+## A largura da caixa pode ajudar na legibilidade
+
+* Além de ajudar na estética
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot(width = .1) # .1 = 0.1  
+```
+
+## Mostrar todos os pontos
+
+* Sobrepor todos os pontos no boxplot
+  + *geom_jitter* ou *ggbeeswarm::geom_quasirandom*
+
+&nbsp;
+
+* Mais detalhes junto com o sumário
+  + Ajuda mudar a transparência dos pontos
+
+&nbsp;
+
+* Importante não haver repetição de pontos
+  + Omitir os pontos plotados pelo boxplot
+
+## Mostrar todos os pontos
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA) + # omite pontos do boxplot
+  geom_jitter(width = .05, alpha = .4, size = 1, color= "brown")
+```
+
+## Removendo linhas fora da caixa (whiskers)
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 0) + # remove whiskers
+  geom_jitter(width = .05, alpha = .4, size = 1, color= "brown")
+```
+
+## Mudando o significado das linhas (whiskers) 
+
+* Se *coef* muito alto as linhas incluem máx e min (linha = coef*IQR)
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000) + # coef alto
+  geom_jitter(width = .05, alpha = .4, size = 1, color= "brown")
+```
+
+## Modificando labels e título
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = "", y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000) + # coef alto
+  geom_jitter(width = .05, alpha = .4, size = 1, color= "brown") + 
+  labs(x = "Personagens", y = "Altura (cm)", title = "Linhas indo ao máximo e mínimo")
+```
+
+## Para vários grupos (categorias)
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = species_short, y = height)) + 
+  geom_boxplot(width = .2)
+```
+
+## As dicas anteriores também valem aqui
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = species_short, y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000) + 
+    geom_jitter(width = 0.05, alpha = 0.4, color = "orange")
+```
+
+## Quando o eixo X é numérico
+
+* É preciso indicar quais dados vão em cada caixa (*group*)
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = n_films, y = height, group = n_films)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000) + 
+    geom_jitter(width = 0.05, alpha = 0.4, color = "orange")
+```
+
+## Criando grupos manualmente (função *cut*)
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% mutate(n_filmes_g = cut(n_films, breaks = c(0, 3, 5, 10))) %>% 
+  ggplot(aes(x = n_filmes_g, y = height, group = n_filmes_g)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000) + 
+    geom_jitter(width = 0.05, alpha = 0.4, color = "orange")
+```
+
+## Pontos ao lado das caixas
+
+```{r, echo=TRUE, fig.align='center', fig.height=3.8, fig.width=7}
+starwars %>% ggplot(aes(x = species_short, y = height)) + 
+  geom_boxplot(width = .2, outlier.colour = NA, coef = 1000, 
+               position = position_nudge(.2)) + # ajusta posicionamento das caixas
+    geom_jitter(width = 0.05, height = 0, alpha = 0.4, color = "brown")
+```
+

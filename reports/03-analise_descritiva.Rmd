@@ -1,0 +1,586 @@
+---
+title: "Estatística Descritiva"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais, Raquel Lopes e Tiago Massoni / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+smaller: no
+fontsize: 20pt
+widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, base.dir = "../")
+
+library(readr)
+library(here)
+library(dplyr)
+library(ggplot2)
+library(e1071)
+
+elife <- read.table(here("data/LifeExpTable.txt")) %>% rename(país = V1, expectativa = V2)
+```
+
+## Duas estatísticas
+
+* **Descritiva**:
+  + “Programadores desta equipe conseguem corrigir 2,5 bugs por dia”  
+
+&nbsp;
+
+* **Inferencial**:
+  + “Programadores Java conseguem corrigir 1,3 bugs por dia” 
+  + Foram entrevistados 1200 programadores em 25 países
+
+## Estatística descritiva
+
+* Análise exploratória dos dados (EDA)
+  + Extrair informação dos dados 
+  + Conhecer os dados que serão usados
+
+&nbsp;
+
+* EDA é uma fase crítica inicial para:
+  + Detecção de erros
+  + Verificação de premissas
+  + Seleção preliminar de modelos
+  + Determinar relações entre as variáveis
+  + Avaliar direção e tamanho das relações entre variáveis
+  
+## Distribuição dos dados
+
+* Tendência central (location)
+  + Média, mediana e moda
+
+&nbsp;
+
+* Dispersão (spread)
+  + Desvio padrão, IQR e Range
+ 
+&nbsp;
+
+* Formato (shape) e simetria
+  + Skewness
+  
+&nbsp;
+
+* Outliers?
+  
+## Dados sobre expectativa de vida
+
+```{r head, echo = TRUE}
+head(elife, n = 10)
+```
+
+Total de países nos dados: `r nrow(elife)`
+
+<!-- Como ter um resumo simples desses dados?  -->
+<!-- Qual o número representativo da maior parte dos dados? -->
+
+## Gráfico dos dados pela ordem alfabética (Países)
+
+```{r pontos, fig.width = 10, fig.height=5.5}
+plot <- elife %>% mutate(index = 1:n())
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20)
+
+```
+
+<!-- Do primeiro para o último em ordem alfabética -->
+
+## Dados ordenados por expectativa de vida
+
+```{r pontos2, fig.width = 10, fig.height=5.5}
+plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20)
+
+```
+
+<!-- Do primeiro para o último em ordem de expectativa de vida -->
+
+## O país com menor expectativa
+
+```{r, fig.width = 10, fig.height=5.5}
+plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
+dff <- plot %>% top_n(-1, expectativa)
+
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20) + 
+  geom_point(data = dff, color = "red", size = 3) + 
+  geom_hline(yintercept = dff$expectativa, color = "red") +
+  geom_vline(xintercept = dff$index, color = "red") + 
+  geom_text(data = dff, aes(label = paste(país, ":", round(expectativa, digits = 1))), hjust = -1, vjust = -1, size = 12)
+
+```
+
+## O país com maior expectativa
+
+```{r, fig.width = 10, fig.height=5.5}
+plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
+dff <- plot %>% top_n(1, expectativa)
+
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20) + 
+  geom_point(data = dff, color = "blue", size = 3) + 
+  geom_hline(yintercept = dff$expectativa, color = "blue") +
+  geom_vline(xintercept = dff$index, color = "blue") + 
+  geom_text(data = dff, aes(label = paste(país, ":", round(expectativa, digits = 1))), hjust = 2, vjust = 5, size = 12)
+
+```
+
+## A metade das observações (50% para cada lado)
+
+```{r, fig.width = 10, fig.height=5.5}
+plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
+dff <- plot %>% filter(expectativa == median(expectativa))
+
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20) + 
+  geom_point(data = dff, color = "blue", size = 3) + 
+  #geom_hline(yintercept = dff$expectativa, color = "blue") +
+  geom_vline(xintercept = dff$index, color = "blue") + 
+  geom_text(data = dff, aes(label = país), hjust = 1.2, vjust = 5, size = 12)
+
+```
+
+## A metade das observações (50% para cada lado)
+
+```{r, fig.width = 10, fig.height=5.5}
+plot <- elife %>% arrange(expectativa) %>% mutate(index = 1:n()) 
+dff <- plot %>% filter(expectativa == median(expectativa))
+
+ggplot(plot, aes(index, expectativa)) + 
+  geom_point(alpha = 0.5) + 
+  scale_y_continuous(limits = c(0, 85)) + 
+  xlab("país") + 
+  theme_bw(base_size = 20) + 
+  geom_point(data = dff, color = "blue", size = 3) + 
+  #geom_hline(yintercept = dff$expectativa, color = "blue") +
+  geom_vline(xintercept = dff$index, color = "blue") + 
+  geom_text(data = dff, aes(label = paste("Mediana:", round(expectativa, digits = 1))), hjust = 1.2, vjust = 5, size = 12)
+
+```
+<!-- Valor que divide os dados no meio (50-percentil). Metade da massa de probabilidade de cada lado -->
+
+
+## A distribuição dos dados (histograma)
+
+* Divide o intervalo células e conta as obeservações por célula
+  + Células grandes podem ocultar detalhes importantes da distribuição
+  + Células pequenas podem gerar ruído e atrapalhar a análise
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_histogram(alpha = 0.5, binwidth = 1) + 
+  theme_bw(base_size = 20)
+
+```
+
+## Outra forma de ver distribuições (staked dot plot)
+
+&nbsp;
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  theme_bw(base_size = 20)
+
+```
+
+
+## Mediana da expectativa de vida
+
+A mediana divide os dados pela metade (50-percentil)
+
+&nbsp;
+
+```{r, fig.width = 10, fig.height=4.2}
+dff <- elife %>% filter(expectativa == median(expectativa))
+
+ggplot(elife, aes(expectativa)) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  geom_vline(xintercept = dff$expectativa, color = "blue") + 
+  theme_bw(base_size = 20)
+```
+
+## Média
+
+$$\large \bar{x} = \frac{\sum_{i=1}^n x_i}{n} $$
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  geom_vline(xintercept = mean(elife$expectativa), color = "green") + 
+  theme_bw(base_size = 20)
+```
+
+## Média e Mediana
+
+Média: `r round(mean(elife$expectativa), digits = 2)`
+
+Mediana: `r round(median(elife$expectativa), digits = 2)`
+
+```{r, fig.width = 10, fig.height=4.2}
+dff <- elife %>% filter(expectativa == median(expectativa))
+
+ggplot(elife, aes(expectativa)) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  geom_vline(xintercept = mean(elife$expectativa), color = "green") + 
+  geom_vline(xintercept = dff$expectativa, color = "blue") + 
+  theme_bw(base_size = 20)
+```
+
+## Moda 
+
+* É o valor que detém o maior número de observações
+  + Valor ou valores mais frequentes
+  
+&nbsp;
+
+* Exemplo: O curso de Mestrado teve mais ocorrências do que as outras alternativas
+
+## Percentis e Quartis
+
+* Percentil é o valor que divide os dados em X%
+  + A mediana é o 50-percentil, que divide os dados em 50%
+  
+&nbsp;
+
+* Quartil é outra nomenclatura para percentis específicos
+  + 1º quartil é o equivalente ao 25-percentil
+  + 2º quartil é o equivalente ao 50-percentil
+  + 3º quartil é o equivalente ao 75-percentil
+  
+## 1º Quartil ou 25-percentil
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_rect(aes(ymin = 0, ymax = 1, 
+                xmin = min(elife$expectativa), 
+                xmax = quantile(elife$expectativa, probs = 0.25)), fill = "lightblue", alpha = 0.1) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  theme_bw(base_size = 20) + 
+  theme(legend.position = "none")
+```
+
+## 2º Quartil ou 50-percentil
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_rect(aes(ymin = 0, ymax = 1, 
+                xmin = min(elife$expectativa), 
+                xmax = quantile(elife$expectativa, probs = 0.5)), fill = "lightblue", alpha = 0.1) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  theme_bw(base_size = 20) + 
+  theme(legend.position = "none")
+```
+
+## 3º Quartil ou 75-percentil
+
+```{r, fig.width = 10, fig.height=4.2}
+ggplot(elife, aes(expectativa)) + 
+  geom_rect(aes(ymin = 0, ymax = 1, 
+                xmin = min(elife$expectativa), 
+                xmax = quantile(elife$expectativa, probs = 0.75)), fill = "lightblue", alpha = 0.5) + 
+  geom_dotplot(alpha = 0.5, binwidth = 1, dotsize = 0.75) + 
+  theme_bw(base_size = 20) + 
+  theme(legend.position = "none")
+```
+
+## Sumário dos dados de expectativa
+
+```{r, echo = TRUE}
+summary(elife$expectativa)
+```
+
+## Boxplots: sumário visual
+
+<p align="center">
+  <img width="55%" src="data/img/boxplot.png">
+</p>
+
+## Boxplot da expectativa de vida
+
+```{r, fig.width = 5, fig.height=5.5, fig.align='center'}
+
+dff <- data.frame(values = as.array(summary(elife$expectativa))) %>% 
+  mutate(labels = paste(values.Var1, ": ", round(values.Freq, digits = 1), sep = "")) %>% 
+  rename(values = values.Freq) %>% 
+  select(labels, values)
+
+ggplot(elife, aes(x = 0, y = expectativa)) + 
+  geom_boxplot(position = position_dodge(width = 0.4)) + 
+  theme_bw(base_size = 20) + 
+  scale_x_continuous(limits = c(-1, 1), breaks = c(0)) + 
+  geom_text(data = dff, aes(0.75, values, label = labels), size = 5) + 
+  xlab("")
+```
+
+## Dispersão
+
+* Quão dispersos ou espalhados são os dados? 
+  + $Range = Máximo - Mínimo$
+  + $IQR = Q3 - Q1$
+  + Desvio padrão S
+
+$$V = \frac{\sum_{i=1}^n{(X_i - \bar{X})^2}}{n-1}$$
+&nbsp;
+
+$$S = \sqrt{V}$$
+
+## Outliers
+
+* Valores distantes da tendência central dos dados
+  + Muito muito altos ou muito muito baixos (exemplo $\pm 1.5 \times IQR$)
+  
+<p align="center">
+  <img width="45%" src="data/img/boxplot.png">
+</p>
+
+## Outliers 
+
+* Nem sempre devem ser ignorados! 
+  + Verificar caso a caso quando devem ou não ser incluídos
+  
+&nbsp;
+
+* Podem ser gerados por: 
+  + Erros procedurais: execução, medição, etc.
+  + Eventos extraordinários
+  + Observação extraordinária
+  
+## z Scores
+
+* Medida padronizada para avaliar valores individuais
+  + Quão distante um valor encontra-se da média? 
+
+\vspace{10}
+  
+* É a distância de um valor da média em unidades de desvio padrão
+
+$$z = \frac{X - \bar{X}}{S}$$
+\vspace{10}
+
+<p align="center">
+  <img width="75%" src="data/img/zscore-example.png">
+</p>
+
+## Formato da distribuição
+
+* Qual o formato da distribuição dos dados?
+  + Simétrico ou assimétrico? 
+  + Quão achatada é a distribuição?
+  
+* Histogramas são uma boa ferramenta para estudar o formato
+  + Divide o intervalo em buckets ou células
+  + Conta quantas observações caem em cada célula
+  
+
+```{r, fig.width = 5, fig.height=2.8}
+dff = data.frame(values = rnorm(100))
+
+ggplot(dff, aes(values)) +
+  geom_histogram(binwidth = 1) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "none")
+```
+
+## Distribuições unimodal e bimodal
+
+* Em uma distribuição unimodal o pico é a moda
+* Em uma distribuição bimodal os valores de moda, média e mediana tendem a ser diferentes
+
+&nbsp;
+
+<p align="center">
+  <img width="100%" src="data/img/bimodal.png">
+</p>
+
+## Simetria (skewness)
+
+* Medida do tamanho e da direção da assimetria da distribuição
+  + Pode ser positiva ou negativa
+  
+&nbsp;
+
+* Muito assimétrica: skewness menor que -1 ou maior que 1 
+* Moderadamente assimétrica: skewness entre -1 e -0.5 ou entre 0.5 e 1
+* Aproximadamente simétrica: skewness entre -0.5 e 0.5: 
+
+```{r dados-dist}
+# dnorm <- data.frame(values = round(rnorm(1000), digits = 1), type = "normal")
+# drasym <- data.frame(values = round(rexp(1000, rate = .5), digits = 1), type = "right")
+# dlasym <- data.frame(values = round(rweibull(1000, shape=12, scale = 10), digits = 1), type = "left")
+# 
+# dff <- bind_rows(dnorm, drasym) %>% bind_rows(dlasym)
+# 
+# write_csv(dff, here("data/distributions.csv"))
+
+dff <- read_csv(here("data/distributions.csv"), col_types = c("dc"))
+```
+
+
+## Distribuição simétrica
+
+* <span style="color:red">Moda</span>, <span style="color:blue">Mediana</span> e <span style="color:green">Média</span> possuem valores próximos
+
+```{r}
+normal_values <- (dff %>% filter(type == "normal"))$values
+```
+
+```{r, echo=TRUE}
+skewness(normal_values)
+```
+
+```{r, fig.width = 8, fig.height=3.8, fig.align='center'}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+ggplot(dff %>% filter(type == "normal"), aes(values)) +
+  geom_histogram(binwidth = 0.5, alpha = 0.5) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "none") + 
+  geom_vline(xintercept = mean(normal_values), color = "green") + 
+  geom_vline(xintercept = median(normal_values), color = "blue") + 
+  geom_vline(xintercept = getmode(normal_values), color = "red")
+```
+  
+## Distribuição asimétrica a direita (viés positivo) 
+
+* <span style="color:red">Moda</span> $\lt$ <span style="color:blue">Mediana</span> $\lt$ <span style="color:green">Média</span>
+
+```{r}
+rasym_values <- (dff %>% filter(type == "right"))$values
+```
+
+```{r, echo=TRUE}
+skewness(rasym_values)
+```
+
+```{r, fig.width = 8, fig.height=3.8, fig.align='center'}
+
+ggplot(dff %>% filter(type == "right"), aes(values)) +
+  geom_histogram(binwidth = 0.5, alpha = 0.5) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "none") + 
+  geom_vline(xintercept = mean(rasym_values), color = "green") + 
+  geom_vline(xintercept = median(rasym_values), color = "blue") + 
+  geom_vline(xintercept = getmode(rasym_values), color = "red")
+```
+  
+## Distribuição asimétrica a esquerda (viés negativo) 
+
+* <span style="color:red">Moda</span> $\gt$ <span style="color:blue">Mediana</span> $\gt$ <span style="color:green">Média</span>
+
+```{r}
+lasym_values <- (dff %>% filter(type == "left"))$values
+```
+
+```{r, echo=TRUE}
+skewness(lasym_values)
+```
+
+```{r, fig.width = 8, fig.height=3.8, fig.align='center'}
+
+ggplot(dff %>% filter(type == "left"), aes(values)) +
+  geom_histogram(binwidth = 0.5, alpha = 0.5) +
+  theme_bw(base_size = 18) +
+  theme(legend.position = "none") + 
+  geom_vline(xintercept = mean(lasym_values), color = "green") + 
+  geom_vline(xintercept = median(lasym_values), color = "blue") + 
+  geom_vline(xintercept = getmode(lasym_values), color = "red")
+```
+  
+## Distribuição normal
+
+* Pontos concentrados no centro
+  + Diminuem progressivamente quando distancia-se do centro 
+
+* A curva é simétrica em torno do ponto central
+
+```{r, fig.align='center', fig.height=4.5}
+dff <- data.frame(values = rnorm(10000) * 10)
+bw = 2
+n_obs = sum(!is.na(dff$values))
+
+dff %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dff$values), sd = sd(dff$values)) * bw * n_obs) + 
+  theme_bw(base_size = 18) +
+  ylab("") + xlab("")
+```
+
+## Distribuição normal
+
+* A distribuição é bastante importante na estatística
+  + É comum assumir que a população é normalmente distribuída
+  + Os dados são selecionados aleatoriamente de uma distribuição normal
+
+```{r, fig.align='center', fig.height=4.5}
+dff %>% ggplot(aes(values)) + 
+  geom_histogram(binwidth = bw, alpha = 0.5) + 
+  stat_function(fun = function(x) 
+    dnorm(x, mean = mean(dff$values), sd = sd(dff$values)) * bw * n_obs) + 
+  theme_bw(base_size = 18) +
+  ylab("") + xlab("")
+```
+
+## Qual medida usar para sumarizar os dados? 
+
+* Moda é usada para variáveis categóricas  
+
+* Média é sensível a outliers  
+  + Principalmente para amostras pequenas
+  + Mediana e moda são resistentes (robustas)  
+
+\vspace{10}
+
+* Média dá o mesmo peso a cada observação  
+
+* Mediana e moda descartam informação  
+
+* Média ou mediana para dados não categóricos?
+
+## Média ou Mediana?
+
+* Se a distribuição é assimétrica, usar mediana 
+  + Ex.: poucos produtos são muito procurados e muitos produtos são pouco procurados
+
+&nbsp;
+
+* Caso contrário usar a média
+  + Ex.: 80% dos fenômenos naturais seguem esta distribuição
+  
+<p align="center">
+  <img width="60%" src="data/img/media.png">
+</p>
+  
+## Impacto de outliers na média
+
+```{r, echo=TRUE}
+x <- c(1.2,1.3,1.5,1.4,1.5,1.4,1.5,1.6,1.5,1.4,1.5,1.6,1.7,1.5,1.3,1.4,1.5,1.5)
+summary(x)
+y <- c(1.2,1.3,1.5,1.4,1.5,1.4,1.5,1.6,1.5,1.4,1.5,1.6,1.7,1.5,1.3,1.4,1.5,1.5,10)
+summary(y)
+```
+

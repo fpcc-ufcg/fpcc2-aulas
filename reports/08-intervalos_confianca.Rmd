@@ -1,0 +1,330 @@
+---
+title: "Intervalos de Confiança"
+subtitle: "Fundamentos de Pesquisa em Ciência da Computação II"
+author: "Fabio Morais / PPGCC - UFCG"
+output:
+  ioslides_presentation: default
+  beamer_presentation: default
+smaller: no
+fontsize: 20pt
+widescreen: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(readr)
+library(here)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+theme_set(theme_bw(base_size = 18))
+```
+
+## Uma pesquisa de opinião
+
+* O apoio do público para a Proposição A é de 53%  
+
+* Em uma pesquisa com uma margem de erro de 2%
+
+&nbsp;
+
+<center>
+**"53% de apoio, Intervalo de Confiança (IC) de 95% [51, 55]"**
+</center>
+
+&nbsp;
+
+&nbsp;
+
+<p align="center">
+  <img width="90%" src="data/img/ic_example.png">
+</p>
+
+## Intervalo de estimativa
+
+* IC é o intervalo de estimativa de um valor da população  
+  + Exemplo: percentual de apoiadores da proposição A  
+<br>
+
+* Permite responder questões com base em estimativas
+<br>
+
+* Considera uma quantificação de incerteza sobre a estimativa 
+  + Margem de erro (MoE) -- 2%
+  + Nível de confiança -- 95%
+
+&nbsp;
+
+<center>
+**"Somos 95% confiantes que o intervalo [51,55] inclui o valor<br> correto de apoio da população"**
+</center>
+
+
+## A probabilidade no intervalo de confiança
+
+* Valores mais próximos do centro do intervalo são mais plausíveis de serem o valor da população  
+
+  + É mais provável que 53% seja de fato o percentual de apoio da população  
+
+* A medida que se aproximam das extremidades os valores ficam progressivamente menos plausíveis  
+  
+* Valores fora do intervalo são ainda menos plausíveis
+
+<p align="center">
+  <img width="100%" src="data/img/ic_probs.png">
+</p>
+
+## Sobre o exemplo da pesquisa de opinião
+
+* Com 95% de confiança, o intervalo [51, 55] inclui o percentual de apoio real
+
+<br>
+
+* A margem de erro (MoE), que é de 2%, é o maior erro provável de estimativa  
+
+  + Provavelmente, a estimativa (53%) não está mais do que 2% distante do valor real de apoio da população
+
+<br>
+
+* Se a pesquisa for repetida com a mesma metodologia, mas com uma nova amostra, é provável que o valor estimado esteja dentro do intervalo original  
+
+  + No entanto, é possível que não esteja
+  
+## Erro de estimativa e Margem de Erro (MoE)
+
+* O erro de estimativa é a distância entre o valor estimado baseado na amostra e o parâmetro da população que está sendo estimado  
+  + Exemplo: a média amostral e a média da população ($M - \mu$)
+  
+<br>
+
+* A margem de erro (MoE) é o maior erro de estimativa provável
+  + Calculado com base do erro padrão SE (desvio padrão da amostra)
+
+$$MoE = 1.96 \times SE = 1.96 \times \frac{\sigma}{\sqrt{N}}$$
+
+* Por que usamos o valor 1.96 na equação?  
+
+## Por que 1.96 no cáculo da MoE?
+
+1º Considera-se que a distribuição amostral é **normalmente distribuída**
+
+2º Deseja-se um **nível de confiança de 95%** na estimativa
+
+  + Uma probabilidade de 95% do erro de estimativa ser menor que a MoE
+
+3º O **z-score de 1.96** delimita uma área que equivale a **95% de probabilidade**
+
+  + Considerando o gráfico de densidade da normal padrão
+
+<p align="center">
+  <img width="75%" src="data/img/normal_z.png">
+</p>
+
+## Margem de Erro (MoE)
+
+* Considerando um amostra normalmente distribuída
+
+* Para um nível de confiança de 95%
+
+$$MoE = z_{95\%} \times \frac{\sigma}{\sqrt{N}}$$
+<br>
+
+* De forma geral, para um nível de confiança C
+
+$$MoE_c = z_{c} \times \frac{\sigma}{\sqrt{N}}$$
+
+## Intervalos de Confiança
+
+* Considerando uma estimativa de média da população
+
+* Para 95% das médias estimadas o erro de estimativa é menor que a margem
+
+$$ |M - \mu| < MoE$$
+
+* Onde:
+
+  + $|M - \mu|$ é o erro de estimativa da média em relação à média populacional 
+  
+  + $MoE = z_{95\%} \times \frac{\sigma}{\sqrt{N}}$ é a margem de erro para $C = 95\%$
+
+<br>
+
+* Então para a maioria dos casos a estimativa $M$ é próxima de $\mu$
+
+## Intervalos de confiança
+
+* Um intervalo de estimativa com uma incerteza associada  
+
+  + Um nível de confiança de $C\%$ que influencia na margem de erro
+    + Normalmente $C = 95\%$
+    
+  + Para $C\%$ dos casos o valor da população ($\mu$) estará dentro do intervalo
+
+<br>
+
+* O valor da população ($\mu$) é desconhecido e o IC é uma estimativa para ele
+  
+<br>
+
+$$\left [M - MoE, M + MoE \right ]$$
+  
+## Em outras palavras 
+
+* Um intervalo de confiança de 95% é um intervalo calculado de uma amostra de dados 
+
+<br>
+
+* Um intervalo dentre infinitos possíveis, onde 95% destes incluem o parâmetro da população
+
+<br>
+
+* Exemplo: o IC de uma média amostral ($M$) é $\left [M - MoE, M + MoE \right ]$
+  + No longo prazo, 95% dos intervalos de confiança calculados incluem $\mu$ e 5% não incluem
+  
+## Nem todos os ICs incluem o parâmetro da população (1 - C% falham)
+
+<p align="center">
+  <img width="80%" src="data/img/ic_danca.png">
+</p>
+
+## Resumindo
+
++ Para amostras normalmente distribuídas e 95% de nível de confiança
+
+$$\left [M - 1.96 \times \frac{\sigma}{\sqrt{N}}, M + 1.96 \times \frac{\sigma}{\sqrt{N}} \right ]$$
+
++ Para diferentes níveis de confiança C
+
+$$\left [M - z_c \times \frac{\sigma}{\sqrt{N}}, M + z_c \times \frac{\sigma}{\sqrt{N}} \right ]$$
+<br>
+
++ Onde $M$ é a média da amostra, $N$ é o tamanho da amostra, $\sigma$ é o desvio padrão da população e $z_c$ é o z-score para um nível de confiança C
+
+## O desvio padrão da população ($\sigma$)
+
+* Para calcular um intervalo de confiança é preciso conhecer $\sigma$
+
+$$z = \frac{X - \mu}{\sigma}$$
+
+* O que fazer se $\sigma$ não for conhecido? (em geral não é conhecido)
+
+<br>
+
+* É necessário estimar a o valor de $\sigma$ a partir de dados da amostra, que segue uma distribuição normal, com média $\mu$ e desvio padrão $SE = \sigma / \sqrt{N}$
+
+  + Calcular $z$ para a média da amostra $M$
+  
+## Calculando $z$ para a amostra
+
+A amostra tem distribuição normal com média $\mu$ e desvio igual a $SE = \sigma / \sqrt{N}$
+
+$$z = \frac{X - \mu}{\sigma} \hspace{20px} \Longrightarrow \hspace{20px} \frac{M - \mu}{SE} \hspace{20px} \Longrightarrow \hspace{20px} \frac{M - \mu}{\sigma / \sqrt{N}}$$
+
+* Mas qual é o valor de $\sigma$? 
+
+* A melhor informação sobre $\sigma$ é o desvio padrão $s$ dos dados da amostra 
+  + Não da distribuição da amostra
+  
+$$ t = \frac{M - \mu}{s / \sqrt{N}}$$
+
+* O valor de $t$ é uma aproximação / estimativa de $z$ a partir da amostra
+
+## A distribuição $t$ (*$t$ de student*)
+
+* A distribuição $t$ é uma aproximação da normal padrão
+  + Com maior variabilidade do que $z$
+  + Com média igual a 0, mas o desvio padrão é maior que 1 
+
+<br>
+
+* Na verdade existe uma família de distribuições $t$
+  + A seleção da curva de $t$ depende do número de graus de liberdade ($df$)
+  + Para o exemplo da média $df = N - 1$, onde $N$ é o tamanho da amostra 
+  
+## Graus de liberdade
+
+* Quanto maior o tamanho da amostra mais $t$ se aproxima da normal
+  + Para $N = 30$, a curva de $t$ é praticamente a normal (linha preta)
+  
+```{r, fig.align='center', fig.width=9}
+graus <- c(1, 2, 10, 30, 100, 1000)
+dff <- data.frame(df = rep(graus, 1001)) %>% 
+  group_by(df) %>%
+  mutate(X = seq(-5, 5, .01)) %>% 
+  mutate(Y = dt(X, df = df, ncp = 0)) %>% 
+  arrange(df)
+
+
+d <- density(rnorm(n = 10000000))
+df_normal <- data.frame(df = NA, X = d$x, Y = d$y)
+
+ggplot(dff, aes(X, Y, color = as.factor(df))) + 
+  geom_line(size = 2, alpha = 0.5) + 
+  ylab(NULL) + xlab(NULL) + 
+  scale_color_hue("Graus de\nliberdade") + 
+  geom_line(data = df_normal, color = "black")
+```
+
+## Aproximação da normal
+
+Para que uma aproximação seja possível
+
+  + Os elementos da amostra precisam ser independentes
+  
+  + A distribuição amostral não pode ser fortemente assimétrica
+  
+  + O tamanho da amostra precisa ser grande ($N \ge 30$)
+
+<p align="center">
+  <img width="65%" src="data/img/normal_aprox.png">
+</p>
+
+## ICs quando $\sigma$ não é conhecido
+
+* Na prática $\sigma$ não é conhecido e utiliza-se $s$, desvio padrão da amostra
+  + $z_c$ é trocado por $t_c(df)$, a distribuição $t$ em função de $df$
+  + $\sigma$ e trocado por $s$
+  
+$$\left [M - t_c(df) \times \frac{s}{\sqrt{N}}, M + t_c(df) \times \frac{s}{\sqrt{N}} \right ]$$
+
+<br>
+
+* A margem de erro é $MoE = t_c(df) \times \frac{s}{\sqrt{N}}$
+
+
+* Considerando um nível de confiança de 95%, $MoE = t_{95\%}(df) \times \frac{s}{\sqrt{N}}$
+
+## Comprimento do IC, MoE e Nível de Confiança
+
+* MoE determina a precisão da estimativa do intervalo  
+
+  + O quão próxima a estimativa está do valor real da população
+  + Quanto maior a MoE maior o comprimento do IC e menor a precisão
+  
+<br>
+  
+* O nível de confiança C decreve a proporção de área abaixo da curva de densidade da amostra  
+
+  + Indica uma probabilidade do IC incluir o valor real
+  + Maior confiança implica em menor precisão na estimativa
+
+## Pontos importantes
+
+* Um intervalo de confiança é calculado assumindo um modelo estatístico
+  + Amostras aleatórias de uma população normalmente distribuída  
+
+<br>
+
+* Um intervalo de confiança é um dentre os infinitos possíveis
+  + Cada amostragem gera um novo e diferente IC  
+
+<br>
+
+* Apesar do nível de confiança, um IC pode não incluir o valor estimado da população
+
+<br>
+
+* O intervalo de confiança deve ser representativo da população
+  + O tamanho da amostra não pode ser muito pequeno
